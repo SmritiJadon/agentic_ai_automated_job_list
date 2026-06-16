@@ -54,3 +54,13 @@ If you hit rate limits, enable retry in the Gemini node settings
 
 📄 License
 MIT License
+
+## 📸 Screenshots
+### Workflow
+![Workflow](dashboard.png)
+
+### Google Sheets Mapping
+![Google Sheets Output](sheet_mapping.png)
+
+### Output in Google Sheets
+![Google Sheets Output](output.png)

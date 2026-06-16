@@ -1,0 +1,364 @@
+{
+  "name": "job_search_automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2ece9efd-e88c-4efd-aa2b-bbbf376842bf",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "google_jobs",
+        "q": "Data Scientist",
+        "additionalFields": {
+          "location": "Indore"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d77eb879-2cc3-468a-8119-0291b8f2b6c3",
+      "name": "Google_jobs search",
+      "credentials": {
+        "serpApi": {
+          "id": "Vg7oidaSl5Bc4s8l",
+          "name": "SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "jobs_results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "813f34dd-e70f-4d2a-bc99-8f50cfed2eb6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a professional cover letter writer with the ability to assess job match scores.",
+              "role": "model"
+            },
+            {
+              "content": "=Generate a personalized cover letter for a fresher Data Scientist position at {{ $json.company_name }} in Indore based on the following details: Job Title: Data Scientist Company: {{ $json.company_name }} Location: {{ $json.location }} Resume Details:- Name: Smriti Jadon- Address: Indore- Email: smritijadon2414@gmail.com- Skills: Python, SQL, PowerBI, Machine Learning, Excel, Tableau, Deep Learning, NLP, RAG- Experience: {{ $json.experience }} - Education: {{ $json.education }} - Projects: Health Insurance Charges Prediction, Rice Variety Classification, Gemini Nutrition Assistant, Heart Attack Risk Classification, and MultiPDF Chatbot - RAG (built a pipeline for multi-document chatbot enabling users to query across multiple PDFs with contextual answers using LangChain, FAISS, RAG, and Google Gemini). The candidate has a strong foundation in these skills and is eager to apply them in real-world data science challenges. The cover letter should reflect this and demonstrate enthusiasm for contributing to the company's success. Include the candidate's contact information at the top. Additionally, please assess the job match score based on the candidate's skills and the provided job description."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "3eb1760a-f626-481f-bfa5-e0380a7eaad0",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "f5R88aysR5W9Fw7A",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        208
+      ],
+      "id": "f2f74307-2371-4d61-acc5-9129400dd257",
+      "name": "Code Tool"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "22fad0eb-4db4-4ace-9966-7570964fe90e",
+              "name": "title",
+              "value": "={{ $('Split Out').item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "038c61d1-ce5a-4642-9b1c-1c116ad071a3",
+              "name": "company_name",
+              "value": "={{ $('Split Out').item.json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "31c8dc3b-4eac-4083-b4fd-c54ff4a8d652",
+              "name": "location",
+              "value": "={{ $('Split Out').item.json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "a5da681a-f094-4154-b83b-5072615320e9",
+              "name": "posted_at",
+              "value": "={{ $('Split Out').item.json.detected_extensions.posted_at }}",
+              "type": "string"
+            },
+            {
+              "id": "f4a3fb73-cbe4-4e05-8ec5-5f6bf69fc832",
+              "name": "link",
+              "value": "={{ $('Split Out').item.json.apply_options[0].link }}",
+              "type": "string"
+            },
+            {
+              "id": "b6d82db7-bb76-4ca8-9c1c-ca784951bad6",
+              "name": "description",
+              "value": "={{ $('Split Out').item.json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "ecf56e2d-2b51-438a-b3af-358667cb2fab",
+              "name": "cover_letter",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        0
+      ],
+      "id": "d6bddd19-095c-4062-ba4c-0edbd41bb1a0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1uqUYnx0ZVsmKv5eK5ZnNdA9NVJDKOx4srsd0SB02XpI",
+          "mode": "list",
+          "cachedResultName": "n8n_joblisting_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uqUYnx0ZVsmKv5eK5ZnNdA9NVJDKOx4srsd0SB02XpI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uqUYnx0ZVsmKv5eK5ZnNdA9NVJDKOx4srsd0SB02XpI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "posted_at",
+              "displayName": "posted_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "link",
+              "displayName": "link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cover_letter",
+              "displayName": "cover_letter",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "cec59a11-17d1-40db-a115-1bfc4e166c9a",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "92ywqTLrI4Z9reIB",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google_jobs search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google_jobs search": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Message a model",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2c03c371-110e-4027-abb1-620e35034589",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c132405a5f3b816f6e3a6e3aede4de2c304a71ea235120e8d6edcda8f83de46c"
+  },
+  "nodeGroups": [],
+  "id": "czHDml6Mh51YcO6W",
+  "tags": []
+}
